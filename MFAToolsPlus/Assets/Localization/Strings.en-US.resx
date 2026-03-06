@@ -813,6 +813,9 @@
     <data name="AutoDetectOnConnectionFailed" xml:space="preserve">
         <value>Auto detect available devices on connection failed</value>
     </data>
+    <data name="AutoConnectAfterRefresh" xml:space="preserve">
+        <value>Try connecting automatically after refresh</value>
+    </data>
     <data name="RunningSettings" xml:space="preserve">
         <value>Running</value>
     </data>
@@ -1737,6 +1740,9 @@
     </data>
     <data name="ResizeShortestSide" xml:space="preserve">
         <value>scaling base side</value>
+    </data>
+    <data name="ResizeImportedImageOnImport" xml:space="preserve">
+        <value>Resize imported image</value>
     </data>
     <data name="SelectModel" xml:space="preserve">
         <value>Select a model</value>

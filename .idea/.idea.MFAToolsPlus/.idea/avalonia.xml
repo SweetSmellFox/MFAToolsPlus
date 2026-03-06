@@ -30,6 +30,8 @@
         <entry key="MFAToolsPlus/Views/UserControls/UserControl1.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="MFAToolsPlus/Views/Windows/ErrorView.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="MFAToolsPlus/Views/Windows/RootView.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
+        <entry key="MFAToolsPlus/Views/Windows/RuntimeMissingWindow.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
+        <entry key="MFAToolsPlus/Views/Windows/TempDirWarningWindow.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Controls/Experimental/DesktopEnvironment/SukiDesktopEnvironment.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Controls/GroupBox.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Controls/Hosts/SukiMessageBoxHost.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
@@ -42,6 +44,8 @@
         <entry key="SukiUI/Theme/AutoCompleteBoxStyles.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Theme/Button.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Theme/ColorPicker.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
+        <entry key="SukiUI/Theme/ColorPickerStyle.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
+        <entry key="SukiUI/Theme/ComboBoxItemStyle.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Theme/Index.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Theme/MenuItem.axaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />
         <entry key="SukiUI/Theme/NumericUpDown.xaml" value="MFAToolsPlus/MFAToolsPlus.csproj" />

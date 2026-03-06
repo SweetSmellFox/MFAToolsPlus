@@ -14,6 +14,23 @@
              xmlns:suki="https://github.com/kikipoulet/SukiUI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel Spacing="20">
+        <suki:GlassCard Margin="0,25,0,0" Padding="25,10,25,10">
+            <DockPanel>
+                <ToggleSwitch
+                    Classes="Switch"
+                    DockPanel.Dock="Right"
+                    IsChecked="{Binding AutoConnectAfterRefresh}"
+                    IsEnabled="{Binding Idle, Source={x:Static helper:Instances.RootViewModel}}"
+                    VerticalAlignment="Top" />
+                <StackPanel HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <TextBlock
+                        FontSize="16"
+                        FontWeight="SemiBold"
+                        Text="{markup:I18n {x:Static helper:LangKeys.AutoConnectAfterRefresh}}"
+                        VerticalAlignment="Center" />
+                </StackPanel>
+            </DockPanel>
+        </suki:GlassCard>
         <suki:GlassCard
             IsVisible="{calcBinding:Binding 'CurrentController == maa:MaaControllerTypes.Adb', Source={x:Static helper:Instances.ToolsViewModel}}"
             Margin="0,25,0,0" Padding="25,10,25,10">

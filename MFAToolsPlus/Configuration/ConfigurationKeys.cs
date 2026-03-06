@@ -15,6 +15,8 @@ public static class ConfigurationKeys
     public const string HotKeyToolKey = "HotKeyToolKey";
     public const string HotKeyToolNeuralNetworkDetect = "HotKeyToolNeuralNetworkDetect";
     public const string HotKeyToolNone = "HotKeyToolNone";
+    public const string HotKeyScreenshotToClipboard = "HotKeyScreenshotToClipboard";
+    public const string HotKeyQuickSaveScreenshot = "HotKeyQuickSaveScreenshot";
     public const string DoNotShowAnnouncementAgain = "AnnouncementInfo.DoNotShowAgain";
     public const string DoNotShowChangelogAgain = "Changelog.DoNotShowAgain";
     public const string ForceScheduledStart = "ForceScheduledStart";
@@ -64,9 +66,12 @@ public static class ConfigurationKeys
     public const string AllowAdbHardRestart = "AllowAdbHardRestart";
     public const string RetryOnDisconnected = "RetryOnDisconnected";
     public const string AutoDetectOnConnectionFailed = "AutoDetectOnConnectionFailed";
+    public const string AutoConnectAfterRefresh = "AutoConnectAfterRefresh";
     public const string AdbDevice = "AdbDevice";
     public const string PlayCoverConfig = "PlayCoverConfig";
     public const string CurrentController = "CurrentController";
+    public const string DesktopWindowClassName = "DesktopWindowClassName";
+    public const string DesktopWindowName = "DesktopWindowName";
 
     #endregion
 
@@ -177,6 +182,7 @@ public static class ConfigurationKeys
     public const string LiveViewRefreshRate = "UI.LiveView.RefreshRate";
     public const string ClipboardCopyFormat = "UI.Tools.ClipboardCopyFormat";
     public const string LiveViewScreenshotRelativePath = "UI.LiveView.ScreenshotRelativePath";
+    public const string LiveViewQuickScreenshotFolderPath = "UI.LiveView.QuickScreenshotFolderPath";
     public const string MainWindowWidth = "UI.MainWindow.Width";
     public const string MainWindowHeight = "UI.MainWindow.Height";
     public const string MainWindowPositionX = "UI.MainWindow.PositionX";
@@ -188,6 +194,7 @@ public static class ConfigurationKeys
     #region 工具设置
 
     public const string ResizeShortestSide = "ResizeShortestSide";
+    public const string ResizeImportedImageOnImport = "UI.Tools.ResizeImportedImageOnImport";
     public const string LiveViewExpandX = "UI.LiveView.ExpandX";
     public const string LiveViewExpandY = "UI.LiveView.ExpandY";
     public const string LiveViewExpandW = "UI.LiveView.ExpandW";

@@ -16,7 +16,7 @@
 // </auto-generated>  
 //------------------------------------------------------------------------------
 <#
-    const string ResourceFileName = "../Assets/Localization/Strings.resx"; 
+    const string ResourceFileName = "../Assets/Localization/Strings.resx";
 #>
 
 namespace MFAToolsPlus.Helper;

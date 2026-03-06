@@ -276,6 +276,7 @@ public static class LangKeys
 	public static readonly string RestartPC = "RestartPC";
 	public static readonly string RetryOnDisconnected = "RetryOnDisconnected";
 	public static readonly string AutoDetectOnConnectionFailed = "AutoDetectOnConnectionFailed";
+	public static readonly string AutoConnectAfterRefresh = "AutoConnectAfterRefresh";
 	public static readonly string RunningSettings = "RunningSettings";
 	public static readonly string SaveFailureMessage = "SaveFailureMessage";
 	public static readonly string SavePipelineSuccess = "SavePipelineSuccess";
@@ -583,6 +584,7 @@ public static class LangKeys
 	public static readonly string ClipboardCopyFormatValuesOnly = "ClipboardCopyFormatValuesOnly";
 	public static readonly string ClipboardCopyFormatFieldWithValues = "ClipboardCopyFormatFieldWithValues";
 	public static readonly string ResizeShortestSide = "ResizeShortestSide";
+	public static readonly string ResizeImportedImageOnImport = "ResizeImportedImageOnImport";
 	public static readonly string LiveViewNeuralNetworkDetect = "LiveViewNeuralNetworkDetect";
 	public static readonly string NeuralNetworkDetectHitTest = "NeuralNetworkDetectHitTest";
 	public static readonly string ClassifyLabel = "ClassifyLabel";

@@ -24,19 +24,20 @@ public class HotKeyEditor : TemplatedControl
         set => SetValue(HotKeyProperty, value);
     }
 
-
     private void OnPreviewKeyDown(object? sender, KeyEventArgs e)
     {
         var focusManager = TopLevel.GetTopLevel(this)?.FocusManager;
+        e.Handled = true;
+
         var modifiers = e.KeyModifiers;
         var key = e.Key;
-        if (modifiers == KeyModifiers.None)
+        if (key == Key.Escape)
         {
             HotKey = MFAHotKey.NOTSET;
             focusManager?.ClearFocus();
             return;
         }
-        // 过滤无效按键（适配 Avalonia 的键值系统）
+
         if (key == Key.LeftCtrl
             || key == Key.RightCtrl
             || key == Key.LeftAlt
@@ -51,16 +52,16 @@ public class HotKeyEditor : TemplatedControl
         {
             return;
         }
-        
+
         var gesture = new KeyGesture(key, modifiers);
         HotKey = new MFAHotKey(gesture);
-        
+
         focusManager?.ClearFocus();
     }
 
     private void OnPressed(object? sender, EventArgs e)
     {
-        GlobalHotkeyService.Unregister(HotKey.Gesture);
+        GlobalHotkeyService.Unregister(HotKey?.Gesture);
         HotKey = MFAHotKey.PRESSING;
     }
     
@@ -79,10 +80,7 @@ public class HotKeyEditor : TemplatedControl
         if (_button == null)
             throw new InvalidOperationException("Missing required template parts");
 
-        if (_button != null)
-        {
-            _button.Click += OnPressed;
-            _button.KeyDown += OnPreviewKeyDown;
-        }
+        _button.Click += OnPressed;
+        _button.KeyDown += OnPreviewKeyDown;
     }
 }

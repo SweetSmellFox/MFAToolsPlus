@@ -1,4 +1,6 @@
 ﻿using Avalonia.Collections;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,6 +14,7 @@ using SukiUI.Models;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace MFAToolsPlus.ViewModels.Pages;
@@ -32,6 +35,8 @@ public partial class SettingsViewModel : ViewModelBase
         _hotKeyToolKey = MFAHotKey.Parse(GlobalConfiguration.GetValue(ConfigurationKeys.HotKeyToolKey, ""));
         _hotKeyToolNeuralNetworkDetect = MFAHotKey.Parse(GlobalConfiguration.GetValue(ConfigurationKeys.HotKeyToolNeuralNetworkDetect, ""));
         _hotKeyToolNone = MFAHotKey.Parse(GlobalConfiguration.GetValue(ConfigurationKeys.HotKeyToolNone, ""));
+        _hotKeyScreenshotToClipboard = MFAHotKey.Parse(GlobalConfiguration.GetValue(ConfigurationKeys.HotKeyScreenshotToClipboard, ""));
+        _hotKeyQuickSaveScreenshot = MFAHotKey.Parse(GlobalConfiguration.GetValue(ConfigurationKeys.HotKeyQuickSaveScreenshot, ""));
 
         DispatcherHelper.PostOnMainThread(InitializeHotkeysAfterStartup);
     }
@@ -59,6 +64,10 @@ public partial class SettingsViewModel : ViewModelBase
         SetHotKey(ref _hotKeyToolKey, _hotKeyToolKey, ConfigurationKeys.HotKeyToolKey, ActivateToolKeyCommand);
         SetHotKey(ref _hotKeyToolNeuralNetworkDetect, _hotKeyToolNeuralNetworkDetect, ConfigurationKeys.HotKeyToolNeuralNetworkDetect, ActivateToolNeuralNetworkDetectCommand);
         SetHotKey(ref _hotKeyToolNone, _hotKeyToolNone, ConfigurationKeys.HotKeyToolNone, ActivateToolNoneCommand);
+        SetHotKey(ref _hotKeyScreenshotToClipboard, _hotKeyScreenshotToClipboard, ConfigurationKeys.HotKeyScreenshotToClipboard,
+            Instances.ToolsViewModel.CopyScreenshotToClipboardCommand);
+        SetHotKey(ref _hotKeyQuickSaveScreenshot, _hotKeyQuickSaveScreenshot, ConfigurationKeys.HotKeyQuickSaveScreenshot,
+            Instances.ToolsViewModel.QuickSaveScreenshotToFolderCommand);
     }
 
     [RelayCommand]
@@ -159,6 +168,58 @@ public partial class SettingsViewModel : ViewModelBase
         set => SetHotKey(ref _hotKeyToolNone, value, ConfigurationKeys.HotKeyToolNone, ActivateToolNoneCommand);
     }
 
+    private MFAHotKey _hotKeyScreenshotToClipboard = MFAHotKey.NOTSET;
+    public MFAHotKey HotKeyScreenshotToClipboard
+    {
+        get => _hotKeyScreenshotToClipboard;
+        set => SetHotKey(ref _hotKeyScreenshotToClipboard, value, ConfigurationKeys.HotKeyScreenshotToClipboard,
+            Instances.ToolsViewModel.CopyScreenshotToClipboardCommand);
+    }
+
+    private MFAHotKey _hotKeyQuickSaveScreenshot = MFAHotKey.NOTSET;
+    public MFAHotKey HotKeyQuickSaveScreenshot
+    {
+        get => _hotKeyQuickSaveScreenshot;
+        set => SetHotKey(ref _hotKeyQuickSaveScreenshot, value, ConfigurationKeys.HotKeyQuickSaveScreenshot,
+            Instances.ToolsViewModel.QuickSaveScreenshotToFolderCommand);
+    }
+
+    private string _quickScreenshotFolderPath =
+        ConfigurationManager.Current.GetValue(ConfigurationKeys.LiveViewQuickScreenshotFolderPath, string.Empty);
+    public string QuickScreenshotFolderPath
+    {
+        get => _quickScreenshotFolderPath;
+        set
+        {
+            if (SetProperty(ref _quickScreenshotFolderPath, value))
+            {
+                ConfigurationManager.Current.SetValue(ConfigurationKeys.LiveViewQuickScreenshotFolderPath, value);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task BrowseQuickScreenshotFolder()
+    {
+        var topLevel = TopLevel.GetTopLevel(Instances.RootView);
+        if (topLevel == null)
+        {
+            return;
+        }
+
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            AllowMultiple = false,
+            Title = "选择快速截图保存文件夹"
+        });
+
+        var path = folders.FirstOrDefault()?.TryGetLocalPath();
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            QuickScreenshotFolderPath = path;
+        }
+    }
+
     public void SetHotKey(ref MFAHotKey value, MFAHotKey? newValue, string type, ICommand command)
     {
         if (newValue != null)
@@ -189,3 +250,4 @@ public partial class SettingsViewModel : ViewModelBase
 
     #endregion
 }
+

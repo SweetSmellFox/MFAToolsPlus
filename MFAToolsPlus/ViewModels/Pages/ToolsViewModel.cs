@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls.ApplicationLifetimes;
 
 namespace MFAToolsPlus.ViewModels.Pages;
 
@@ -80,9 +81,16 @@ public enum ClipboardCopyFormat
 
 public partial class ToolsViewModel : ViewModelBase
 {
+    private static readonly object ClipboardTempFilesLock = new();
+    private static readonly HashSet<string> ClipboardTempFiles = [];
+    private static readonly object ClipboardImagesLock = new();
+    private static readonly List<IDisposable> ClipboardImages = [];
+    private static readonly string ClipboardTempDir = Path.Combine(Path.GetTempPath(), "MFAToolsPlus_Clipboard");
+
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private ObservableCollection<object> _devices = [];
     [ObservableProperty] private object? _currentDevice;
+    private bool _suppressAutoConnect;
     [ObservableProperty] private MaaControllerTypes _currentController =
         ConfigurationManager.Current.GetValue(ConfigurationKeys.CurrentController, MaaControllerTypes.Adb, MaaControllerTypes.None, new UniversalEnumConverter<MaaControllerTypes>());
 
@@ -118,6 +126,23 @@ public partial class ToolsViewModel : ViewModelBase
     partial void OnCurrentDeviceChanged(object? value)
     {
         ChangedDevice(value);
+
+        if (!_suppressAutoConnect
+            && value != null
+            && Instances.ConnectSettingsUserControlModel.AutoConnectAfterRefresh)
+        {
+            _ = TaskManager.RunTaskAsync(() =>
+            {
+                try
+                {
+                    MaaProcessor.Instance.TestConnecting().GetAwaiter().GetResult();
+                }
+                catch (Exception ex)
+                {
+                    LoggerHelper.Warning($"Auto connect after device selection failed: {ex.Message}");
+                }
+            }, name: "选中设备后自动连接", catchException: true, shouldLog: true);
+        }
     }
 
     private DateTime? _lastExecutionTime;
@@ -146,6 +171,8 @@ public partial class ToolsViewModel : ViewModelBase
             if (!igoreToast) ToastHelper.Info(LangKeys.WindowSelectionMessage.ToLocalizationFormatted(false, ""), window.Name);
             MaaProcessor.Config.DesktopWindow.Name = window.Name;
             MaaProcessor.Config.DesktopWindow.HWnd = window.Handle;
+            ConfigurationManager.Current.SetValue(ConfigurationKeys.DesktopWindowClassName, window.ClassName ?? string.Empty);
+            ConfigurationManager.Current.SetValue(ConfigurationKeys.DesktopWindowName, window.Name ?? string.Empty);
             MaaProcessor.Instance.SetTasker();
         }
         else if (value is AdbDeviceInfo device)
@@ -325,7 +352,28 @@ public partial class ToolsViewModel : ViewModelBase
         _refreshCancellationTokenSource?.Cancel();
         _refreshCancellationTokenSource = new CancellationTokenSource();
         var controllerType = CurrentController;
-        TaskManager.RunTask(() => AutoDetectDevice(_refreshCancellationTokenSource.Token), _refreshCancellationTokenSource.Token, name: "刷新", handleError: (e) => HandleDetectionError(e, controllerType),
+        TaskManager.RunTask(() =>
+            {
+                AutoDetectDevice(_refreshCancellationTokenSource.Token);
+
+                if (CurrentDevice != null
+                    && Instances.ConnectSettingsUserControlModel.AutoConnectAfterRefresh)
+                {
+                    try
+                    {
+                        _refreshCancellationTokenSource.Token.ThrowIfCancellationRequested();
+                        MaaProcessor.Instance.TestConnecting().GetAwaiter().GetResult();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        LoggerHelper.Warning($"Auto connect after refresh failed: {ex.Message}");
+                    }
+                }
+            }, _refreshCancellationTokenSource.Token, name: "刷新", handleError: (e) => HandleDetectionError(e, controllerType),
             catchException: true, shouldLog: true);
     }
     public void AutoDetectDevice(CancellationToken token = default)
@@ -427,16 +475,62 @@ public partial class ToolsViewModel : ViewModelBase
 
     private (int index, List<DesktopWindowInfo> afterFiltered) CalculateWindowIndex(List<DesktopWindowInfo> windows)
     {
-        MaaInterface.MaaResourceController? controller = null;
+        var controller = SelectedController
+            ?? ControllerOptions.FirstOrDefault(c => c.Type?.Equals("win32", StringComparison.OrdinalIgnoreCase) == true);
 
         if (controller?.Win32 == null)
-            return (windows.FindIndex(win => !string.IsNullOrWhiteSpace(win.Name)), windows);
+        {
+            var idx = MatchPreviousWindow(windows);
+            return (idx >= 0 ? idx : Math.Max(0, windows.FindIndex(win => !string.IsNullOrWhiteSpace(win.Name))), windows);
+        }
 
         var filtered = windows.Where(win =>
             !string.IsNullOrWhiteSpace(win.Name)).ToList();
 
         filtered = ApplyRegexFilters(filtered, controller.Win32);
-        return (filtered.Count > 0 ? filtered.IndexOf(filtered.First()) : 0, filtered.ToList());
+        var matchedIdx = MatchPreviousWindow(filtered);
+        return (matchedIdx >= 0 ? matchedIdx : 0, filtered.ToList());
+    }
+
+    private int MatchPreviousWindow(List<DesktopWindowInfo> windows)
+    {
+        if (windows.Count == 0)
+            return -1;
+
+        if (CurrentDevice is DesktopWindowInfo previousWindow)
+        {
+            var exactMatch = windows.FindIndex(window =>
+                string.Equals(window.ClassName, previousWindow.ClassName, StringComparison.Ordinal)
+                && string.Equals(window.Name, previousWindow.Name, StringComparison.Ordinal));
+            if (exactMatch >= 0)
+                return exactMatch;
+
+            var classMatch = windows.FindIndex(window =>
+                string.Equals(window.ClassName, previousWindow.ClassName, StringComparison.Ordinal));
+            if (classMatch >= 0)
+                return classMatch;
+
+            return -1;
+        }
+
+        var savedClassName = ConfigurationManager.Current.GetValue(ConfigurationKeys.DesktopWindowClassName, string.Empty);
+        var savedWindowName = ConfigurationManager.Current.GetValue(ConfigurationKeys.DesktopWindowName, string.Empty);
+
+        if (!string.IsNullOrEmpty(savedClassName))
+        {
+            var exactMatch = windows.FindIndex(window =>
+                string.Equals(window.ClassName, savedClassName, StringComparison.Ordinal)
+                && string.Equals(window.Name, savedWindowName, StringComparison.Ordinal));
+            if (exactMatch >= 0)
+                return exactMatch;
+
+            var classMatch = windows.FindIndex(window =>
+                string.Equals(window.ClassName, savedClassName, StringComparison.Ordinal));
+            if (classMatch >= 0)
+                return classMatch;
+        }
+
+        return -1;
     }
 
 
@@ -461,11 +555,19 @@ public partial class ToolsViewModel : ViewModelBase
     {
         DispatcherHelper.RunOnMainThread(() =>
         {
-            Devices = devices;
-            if (devices.Count > index)
-                CurrentDevice = devices[index];
-            else
-                CurrentDevice = null;
+            _suppressAutoConnect = true;
+            try
+            {
+                Devices = devices;
+                if (devices.Count > index)
+                    CurrentDevice = devices[index];
+                else
+                    CurrentDevice = null;
+            }
+            finally
+            {
+                _suppressAutoConnect = false;
+            }
         });
     }
 
@@ -4718,7 +4820,7 @@ public partial class ToolsViewModel : ViewModelBase
         }
 
         await using var stream = await file.OpenReadAsync();
-        var bitmap = new Bitmap(stream);
+        var bitmap = await LoadImportedBitmapAsync(stream);
         LiveViewImage = bitmap;
         _pausedLiveViewImage = bitmap;
         OnPropertyChanged(nameof(LiveViewDisplayImage));
@@ -5247,22 +5349,9 @@ public partial class ToolsViewModel : ViewModelBase
     [RelayCommand]
     private async Task SaveScreenshot()
     {
-        if (LiveViewDisplayImage is not Bitmap bitmap)
-        {
-            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewNoScreenshot.ToLocalization());
-            return;
-        }
-
-        if (_screenshotRect.Width < 0 || _screenshotRect.Height < 0)
-        {
-            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewSelectScreenshotRegion.ToLocalization());
-            return;
-        }
-
-        var cropped = CropBitmap(bitmap, _screenshotRect);
+        using var cropped = TryGetSelectedScreenshot();
         if (cropped == null)
         {
-            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewInvalidScreenshotRegion.ToLocalization());
             return;
         }
 
@@ -5309,6 +5398,262 @@ public partial class ToolsViewModel : ViewModelBase
 
         ToastHelper.Info(LangKeys.Tip.ToLocalization(),
             string.Format(LangKeys.LiveViewScreenshotSaved.ToLocalization(), path));
+    }
+
+    [RelayCommand]
+    private async Task CopyScreenshotToClipboard()
+    {
+        var image = TryGetFullScreenshot();
+        if (image == null)
+        {
+            return;
+        }
+
+        var topLevel = TopLevel.GetTopLevel(Instances.RootView);
+        var clipboard = topLevel?.Clipboard;
+        if (clipboard == null)
+        {
+            image.Dispose();
+            return;
+        }
+
+        var dataTransfer = new DataTransfer();
+        dataTransfer.Add(DataTransferItem.Create(DataFormat.Bitmap, image));
+
+        string? tempPath = null;
+        try
+        {
+            tempPath = CreateClipboardTempFilePath();
+            image.Save(tempPath);
+
+            IStorageFile? storageFile = null;
+            TopLevel? t =  Application.Current?.ApplicationLifetime switch
+            {
+                IClassicDesktopStyleApplicationLifetime desktop => desktop.MainWindow,
+                ISingleViewApplicationLifetime single when single.MainView is Control control => TopLevel.GetTopLevel(control),
+                _ => null
+            };
+            var storageProvider = t?.StorageProvider;
+            if (storageProvider != null)
+                storageFile = await storageProvider.TryGetFileFromPathAsync(tempPath);
+            if (storageFile != null)
+                dataTransfer.Add(DataTransferItem.CreateFile(storageFile));
+        }
+        catch
+        {
+        }
+
+        await clipboard.SetDataAsync(dataTransfer);
+        RecordClipboardImage(image);
+
+        if (!string.IsNullOrWhiteSpace(tempPath))
+        {
+            RecordClipboardTempFile(tempPath);
+        }
+
+        ToastHelper.Info(LangKeys.Tip.ToLocalization(), LangKeys.CopiedToClipboard.ToLocalization());
+    }
+
+    [RelayCommand]
+    private async Task QuickSaveScreenshotToFolder()
+    {
+        using var image = TryGetFullScreenshot();
+        if (image == null)
+        {
+            return;
+        }
+
+        var folderPath = ConfigurationManager.Current.GetValue(ConfigurationKeys.LiveViewQuickScreenshotFolderPath, string.Empty)?.Trim();
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), "请先设置快速截图保存文件夹");
+            return;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(folderPath);
+            var fileName = $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss_fff}.png";
+            var path = Path.Combine(folderPath, fileName);
+
+            await using (var stream = File.Create(path))
+            {
+                image.Save(stream);
+            }
+
+            ScreenshotRelativeResult = path;
+            ToastHelper.Info(LangKeys.Tip.ToLocalization(),
+                string.Format(LangKeys.LiveViewScreenshotSaved.ToLocalization(), path));
+        }
+        catch (Exception ex)
+        {
+            ToastHelper.Error(LangKeys.Tip.ToLocalization(), $"快速截图保存失败：{ex.Message}");
+        }
+    }
+
+    private Bitmap? TryGetSelectedScreenshot()
+    {
+        if (LiveViewDisplayImage is not Bitmap bitmap)
+        {
+            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewNoScreenshot.ToLocalization());
+            return null;
+        }
+
+        if (_screenshotRect.Width <= 0 || _screenshotRect.Height <= 0)
+        {
+            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewSelectScreenshotRegion.ToLocalization());
+            return null;
+        }
+
+        var cropped = CropBitmap(bitmap, _screenshotRect);
+        if (cropped == null)
+        {
+            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewInvalidScreenshotRegion.ToLocalization());
+            return null;
+        }
+
+        return cropped;
+    }
+
+    private Bitmap? TryGetFullScreenshot()
+    {
+        if (LiveViewDisplayImage is not Bitmap bitmap)
+        {
+            ToastHelper.Warn(LangKeys.Tip.ToLocalization(), LangKeys.LiveViewNoScreenshot.ToLocalization());
+            return null;
+        }
+
+        var width = bitmap.PixelSize.Width;
+        var height = bitmap.PixelSize.Height;
+        var stride = width * 4;
+        var buffer = new byte[height * stride];
+
+        unsafe
+        {
+            fixed (byte* ptr = buffer)
+            {
+                bitmap.CopyPixels(new PixelRect(0, 0, width, height), (IntPtr)ptr, buffer.Length, stride);
+            }
+        }
+
+        var target = new WriteableBitmap(bitmap.PixelSize, new Vector(96, 96), PixelFormat.Bgra8888, AlphaFormat.Premul);
+        using (var fb = target.Lock())
+        {
+            unsafe
+            {
+                fixed (byte* ptr = buffer)
+                {
+                    Buffer.MemoryCopy(ptr, (void*)fb.Address, fb.RowBytes * height, buffer.Length);
+                }
+            }
+        }
+
+        return target;
+    }
+
+    private static string CreateClipboardTempFilePath()
+    {
+        Directory.CreateDirectory(ClipboardTempDir);
+        return Path.Combine(ClipboardTempDir, $"screenshot_{Guid.NewGuid():N}.png");
+    }
+
+    private static void RecordClipboardTempFile(string tempPath)
+    {
+        lock (ClipboardTempFilesLock)
+        {
+            ClipboardTempFiles.Add(tempPath);
+        }
+    }
+
+    private static async Task<Bitmap> LoadImportedBitmapAsync(Stream stream)
+    {
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        var imageBytes = memoryStream.ToArray();
+
+        if (!Instances.ToolSettingsUserControlModel.ResizeImportedImageOnImport)
+        {
+            return new Bitmap(new MemoryStream(imageBytes));
+        }
+
+        using var buffer = new MaaImageBuffer();
+        if (!TrySetEncodedData(buffer, imageBytes))
+        {
+            return new Bitmap(new MemoryStream(imageBytes));
+        }
+
+        var shortestSide = Math.Max(1, Instances.ToolSettingsUserControlModel.ResizeShortestSide);
+        var targetWidth = buffer.Width <= buffer.Height ? shortestSide : 0;
+        var targetHeight = buffer.Width <= buffer.Height ? 0 : shortestSide;
+
+        if (buffer.Width > 0 && buffer.Height > 0)
+        {
+            buffer.TryResize(targetWidth, targetHeight);
+        }
+
+        return buffer.ToBitmap() ?? new Bitmap(new MemoryStream(imageBytes));
+    }
+
+    private static void RecordClipboardImage(IDisposable image)
+    {
+        lock (ClipboardImagesLock)
+        {
+            ClipboardImages.Add(image);
+        }
+    }
+
+    public static void CleanupClipboardTempFiles()
+    {
+        IDisposable[] images;
+        lock (ClipboardImagesLock)
+        {
+            images = ClipboardImages.ToArray();
+            ClipboardImages.Clear();
+        }
+
+        foreach (var image in images)
+        {
+            try
+            {
+                image.Dispose();
+            }
+            catch
+            {
+            }
+        }
+
+        string[] files;
+        lock (ClipboardTempFilesLock)
+        {
+            files = ClipboardTempFiles.ToArray();
+            ClipboardTempFiles.Clear();
+        }
+
+        foreach (var file in files)
+        {
+            try
+            {
+                if (File.Exists(file))
+                {
+                    File.Delete(file);
+                }
+            }
+            catch
+            {
+            }
+        }
+
+        try
+        {
+            if (Directory.Exists(ClipboardTempDir)
+                && !Directory.EnumerateFileSystemEntries(ClipboardTempDir).Any())
+            {
+                Directory.Delete(ClipboardTempDir, false);
+            }
+        }
+        catch
+        {
+        }
     }
 
     [RelayCommand]

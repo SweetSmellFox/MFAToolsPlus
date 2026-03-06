@@ -383,6 +383,7 @@ public class SukiImageViewer : TemplatedControl
 
     static SukiImageViewer()
     {
+        CleanupOnStartup();
         FocusableProperty.OverrideDefaultValue<SukiImageViewer>(true);
         OverlayerProperty.Changed.AddClassHandler<SukiImageViewer>((o, e) => o.OnOverlayerChanged(e));
         SourceProperty.Changed.AddClassHandler<SukiImageViewer>((o, e) => o.OnSourceChanged(e));
@@ -608,7 +609,6 @@ public class SukiImageViewer : TemplatedControl
 
         // 设置右键菜单
         SetupContextMenu();
-        CleanupOnStartup();
     }
 
     private void SetupContextMenu()
@@ -746,11 +746,15 @@ public class SukiImageViewer : TemplatedControl
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+        var point = e.GetCurrentPoint(this);
+        if (!point.Properties.IsLeftButtonPressed)
+            return;
+
         if (!IsDragEnabled)
         {
             if (!e.KeyModifiers.HasFlag(KeyModifiers.Control))
                 return;
-            _ctrlDragActive = e.GetCurrentPoint(this).Properties.IsLeftButtonPressed;
+            _ctrlDragActive = point.Properties.IsLeftButtonPressed;
             if (!_ctrlDragActive)
                 return;
         }
@@ -764,6 +768,9 @@ public class SukiImageViewer : TemplatedControl
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
+        if (!Equals(e.Pointer.Captured, this))
+            return;
+
         if (!IsDragEnabled && !_ctrlDragActive)
             return;
         e.Pointer.Capture(null);

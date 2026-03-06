@@ -156,7 +156,7 @@ namespace SukiUI.Controls
                 _contentBeforeApplied = content;
                 return;
             }
-            
+
             try
             {
                 _animCancellationToken.Cancel();
@@ -168,23 +168,53 @@ namespace SukiUI.Controls
             }
 
             _animCancellationToken = new CancellationTokenSource();
+            var token = _animCancellationToken.Token;
             
             if (_isFirstBufferActive) SecondBuffer = content;
             else FirstBuffer = content;
             _isFirstBufferActive = !_isFirstBufferActive;
+
+            var toPresenter = To;
+            var fromPresenter = From;
+
+            if (toPresenter is null || fromPresenter is null)
+                return;
+
+            var clearFirstBuffer = ReferenceEquals(fromPresenter, _firstBuffer);
+
+            toPresenter.IsHitTestVisible = false;
+            fromPresenter.IsHitTestVisible = false;
+
             try
             {
-                FadeOut.RunAsync(From, _animCancellationToken.Token).ContinueWith(_ =>
+                FadeOut.RunAsync(fromPresenter, token).ContinueWith(_ =>
                 {
+                    if (token.IsCancellationRequested)
+                        return;
+
                     Dispatcher.UIThread.Invoke(() =>
                     {
-                        From.IsHitTestVisible = false;
-                        if (_isFirstBufferActive) SecondBuffer = null;
-                        else FirstBuffer = null;
+                        if (token.IsCancellationRequested)
+                            return;
+
+                        fromPresenter.IsHitTestVisible = false;
+                        if (clearFirstBuffer) FirstBuffer = null;
+                        else SecondBuffer = null;
                     });
                 });
-                FadeIn.RunAsync(To, _animCancellationToken.Token).ContinueWith(_ => 
-                    Dispatcher.UIThread.Invoke(() => To.IsHitTestVisible = true));
+                FadeIn.RunAsync(toPresenter, token).ContinueWith(_ => 
+                {
+                    if (token.IsCancellationRequested)
+                        return;
+
+                    Dispatcher.UIThread.Invoke(() =>
+                    {
+                        if (token.IsCancellationRequested)
+                            return;
+
+                        toPresenter.IsHitTestVisible = true;
+                    });
+                });
             }
             catch
             {

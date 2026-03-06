@@ -40,6 +40,12 @@ public partial class ToolSettingsUserControlModel : ViewModelBase
     partial void OnClipboardCopyFormatChanged(ClipboardCopyFormat value) =>
         HandlePropertyChanged(ConfigurationKeys.ClipboardCopyFormat, value.ToString());
 
+    partial void OnResizeShortestSideChanged(int value) =>
+        HandlePropertyChanged(ConfigurationKeys.ResizeShortestSide, value);
+
+    partial void OnResizeImportedImageOnImportChanged(bool value) =>
+        HandlePropertyChanged(ConfigurationKeys.ResizeImportedImageOnImport, value);
+
     private void UpdateExpand(string key, int value)
     {
         HandlePropertyChanged(key, value);
@@ -82,4 +88,7 @@ public partial class ToolSettingsUserControlModel : ViewModelBase
     }
 
     [ObservableProperty] private int _resizeShortestSide = ConfigurationManager.Current.GetValue(ConfigurationKeys.ResizeShortestSide, 720);
+
+    [ObservableProperty] private bool _resizeImportedImageOnImport =
+        ConfigurationManager.Current.GetValue(ConfigurationKeys.ResizeImportedImageOnImport, false);
 }

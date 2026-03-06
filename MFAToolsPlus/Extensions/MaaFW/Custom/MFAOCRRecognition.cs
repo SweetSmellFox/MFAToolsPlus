@@ -16,7 +16,7 @@ public class MFAOCRRecognition : IMaaCustomRecognition
     public string Name { get; set; } = nameof(MFAOCRRecognition);
     public static Bitmap? Bitmap { get; set; } = null;
     public static string? Output { get; set; } = null;
-    public bool Analyze(in IMaaContext context, in AnalyzeArgs args, in AnalyzeResults results)
+    public bool Analyze<T>(T context, in AnalyzeArgs args, in AnalyzeResults results) where T : IMaaContext
     {
         if (Bitmap == null)
             return false;

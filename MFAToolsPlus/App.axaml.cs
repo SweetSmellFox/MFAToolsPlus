@@ -186,6 +186,7 @@ public partial class App : Application
 
         MaaProcessor.Instance.Close();
         GlobalHotkeyService.Shutdown();
+        ToolsViewModel.CleanupClipboardTempFiles();
         TrayIconManager.DisposeTrayIcon(this);
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
