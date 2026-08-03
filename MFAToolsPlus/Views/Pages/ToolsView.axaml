@@ -16,7 +16,6 @@
              xmlns:other="clr-namespace:MFAToolsPlus.Helper.Other"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MFAToolsPlus.Views.Pages.ToolsView"
-             KeyDown="OnKeyCaptureKeyDown"
              Focusable="True">
     <Design.DataContext>
         <pages:ToolsViewModel />
@@ -732,7 +731,8 @@
                             Margin="10,0,0,0"
                             IsAnimated="False"
                             IsVisible="{Binding IsToolPanelVisible}">
-                <ScrollViewer Margin="12" VerticalScrollBarVisibility="Auto">
+                <ScrollViewer x:Name="ToolPanelScrollViewer"
+                              Margin="12" VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="10">
                         <StackPanel IsVisible="{calcBinding:Binding 'ActiveToolMode == pages:LiveViewToolMode.Roi'}"
                                     Spacing="10">
@@ -870,25 +870,25 @@
                                   ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding RoiX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding RoiX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding RoiY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding RoiY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding RoiW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding RoiW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding RoiH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding RoiH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
                             <Grid IsVisible="{Binding IsTargetMode}"
                                   ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding OriginTargetX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding OriginTargetX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding OriginTargetY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding OriginTargetY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding OriginTargetW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding OriginTargetW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding OriginTargetH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding OriginTargetH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
@@ -958,13 +958,13 @@
                             <Grid ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding TargetX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding TargetX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding TargetY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding TargetY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding TargetW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding TargetW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding TargetH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding TargetH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left"
                                         VerticalAlignment="Center">
@@ -1055,13 +1055,13 @@
                             <Grid ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding ColorPickX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding ColorPickX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding ColorPickY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding ColorPickY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding ColorPickW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding ColorPickW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding ColorPickH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding ColorPickH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
@@ -1521,13 +1521,13 @@
                             <Grid ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding ScreenshotX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding ScreenshotX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding ScreenshotY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding ScreenshotY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding ScreenshotW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding ScreenshotW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding ScreenshotH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding ScreenshotH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
@@ -1735,13 +1735,13 @@
                             <Grid ColumnDefinitions="Auto,3*,Auto,3*"
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
-                                <TextBox Text="{Binding OcrX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" />
+                                <TextBox Text="{Binding OcrX, Mode=TwoWay}" Grid.Row="0" Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
-                                <TextBox Text="{Binding OcrY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" />
+                                <TextBox Text="{Binding OcrY, Mode=TwoWay}" Grid.Row="0" Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
-                                <TextBox Text="{Binding OcrW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" />
+                                <TextBox Text="{Binding OcrW, Mode=TwoWay}" Grid.Row="1" Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
-                                <TextBox Text="{Binding OcrH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" />
+                                <TextBox Text="{Binding OcrH, Mode=TwoWay}" Grid.Row="1" Grid.Column="3" TabIndex="3" />
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
@@ -1865,16 +1865,16 @@
                                   RowDefinitions="Auto,Auto">
                                 <TextBlock Text="X:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="0" />
                                 <TextBox Text="{Binding NeuralNetworkDetectX, Mode=TwoWay}" Grid.Row="0"
-                                         Grid.Column="1" />
+                                         Grid.Column="1" TabIndex="0" />
                                 <TextBlock Text="Y:" VerticalAlignment="Center" Grid.Row="0" Grid.Column="2" />
                                 <TextBox Text="{Binding NeuralNetworkDetectY, Mode=TwoWay}" Grid.Row="0"
-                                         Grid.Column="3" />
+                                         Grid.Column="3" TabIndex="1" />
                                 <TextBlock Text="W:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="0" />
                                 <TextBox Text="{Binding NeuralNetworkDetectW, Mode=TwoWay}" Grid.Row="1"
-                                         Grid.Column="1" />
+                                         Grid.Column="1" TabIndex="2" />
                                 <TextBlock Text="H:" VerticalAlignment="Center" Grid.Row="1" Grid.Column="2" />
                                 <TextBox Text="{Binding NeuralNetworkDetectH, Mode=TwoWay}" Grid.Row="1"
-                                         Grid.Column="3" />
+                                         Grid.Column="3" TabIndex="3" />
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Spacing="15" VerticalAlignment="Center">
@@ -1990,6 +1990,7 @@
                 <ScrollViewer Margin="12" VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="10">
                         <StackPanel IsVisible="{Binding IsOcrTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2061,6 +2062,7 @@
                             </Button>
                         </StackPanel>
                         <StackPanel IsVisible="{Binding IsScreenshotTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2144,6 +2146,7 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsColorTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2673,6 +2676,7 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsClickTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2760,6 +2764,7 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsSwipeTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2900,6 +2905,7 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsKeyTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"
@@ -2913,6 +2919,7 @@
                         </StackPanel>
 
                         <StackPanel IsVisible="{Binding IsNeuralNetworkDetectTestPanelVisible}"
+                                    Classes="HitTestTabScope"
                                     Spacing="8">
                             <TextBlock FontSize="12"
                                        FontWeight="Bold"

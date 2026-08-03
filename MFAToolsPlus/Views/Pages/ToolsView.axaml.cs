@@ -4,10 +4,12 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using MaaFramework.Binding;
 using MFAToolsPlus.Helper;
 using MFAToolsPlus.ViewModels.Pages;
 using System;
+using System.Linq;
 using System.Timers;
 
 namespace MFAToolsPlus.Views.Pages;
@@ -22,6 +24,7 @@ public partial class ToolsView : UserControl
     {
         DataContext = Instances.ToolsViewModel;
         InitializeComponent();
+        AddHandler(KeyDownEvent, OnKeyCaptureKeyDown, RoutingStrategies.Tunnel, handledEventsToo: true);
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
     }
@@ -110,6 +113,40 @@ public partial class ToolsView : UserControl
 
     private void OnKeyCaptureKeyDown(object? sender, KeyEventArgs e)
     {
+        if (e.Key == Key.Tab && e.Source is TextBox current)
+        {
+            var hitTestScope = current
+                .GetVisualAncestors()
+                .OfType<StackPanel>()
+                .FirstOrDefault(panel => panel.Classes.Contains("HitTestTabScope"));
+            var navigationScope = (Control?)hitTestScope ?? ToolPanelScrollViewer;
+
+            var inputs = navigationScope
+                .GetVisualDescendants()
+                .OfType<TextBox>()
+                .Where(input => input.IsVisible
+                                && input.IsEnabled
+                                && input.GetVisualAncestors().All(ancestor => ancestor.IsVisible))
+                .ToArray();
+
+            var currentIndex = Array.IndexOf(inputs, current);
+            if (currentIndex >= 0 && inputs.Length > 1)
+            {
+                var offset = e.KeyModifiers.HasFlag(KeyModifiers.Shift) ? -1 : 1;
+                for (var step = 1; step < inputs.Length; step++)
+                {
+                    var nextIndex = (currentIndex + offset * step + inputs.Length) % inputs.Length;
+                    if (!inputs[nextIndex].Focus())
+                    {
+                        continue;
+                    }
+
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+
         if (DataContext is not ToolsViewModel vm || !vm.IsKeyCaptureActive)
         {
             return;
