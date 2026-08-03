@@ -19,7 +19,7 @@ public partial class RootViewModel : ViewModelBase
 
     [ObservableProperty] private bool _isAdmin;
     
-    public static string Version => "v1.5.0";
+    public static string Version => "v1.5.1";
 
     public RootViewModel()
     {

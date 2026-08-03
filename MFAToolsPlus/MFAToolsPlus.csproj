@@ -11,8 +11,8 @@
 		 <CETCompat>false</CETCompat>
         <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>1.4.0</AssemblyVersion>
-        <FileVersion>1.4.0</FileVersion>
+        <AssemblyVersion>1.5.1</AssemblyVersion>
+        <FileVersion>1.5.1</FileVersion>
     </PropertyGroup>
 
     <PropertyGroup>
