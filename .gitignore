@@ -2,3 +2,6 @@
 /LazyStaticGenerator/bin/
 /SukiUI/bin/
 /bin/
+/artifacts/
+/.dotnet/
+/**/obj/
