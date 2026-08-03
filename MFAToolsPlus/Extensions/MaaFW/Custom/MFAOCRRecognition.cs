@@ -10,7 +10,6 @@ using System.IO;
 
 namespace MFAToolsPlus.Extensions.MaaFW.Custom;
 
-
 public class MFAOCRRecognition : IMaaCustomRecognition
 {
     public string Name { get; set; } = nameof(MFAOCRRecognition);
@@ -26,7 +25,7 @@ public class MFAOCRRecognition : IMaaCustomRecognition
 
         var detail = context.RunRecognition(
             "AppendOCR",
-            image,pipeline);
+            image, pipeline);
 
         if (detail != null)
         {
