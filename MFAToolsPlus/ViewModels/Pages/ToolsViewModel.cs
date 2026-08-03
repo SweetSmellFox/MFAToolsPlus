@@ -345,7 +345,7 @@ public partial class ToolsViewModel : ViewModelBase
         if (CurrentController == MaaControllerTypes.PlayCover
             || CurrentController == MaaControllerTypes.Dbg)
         {
-            SetConnected(false);
+            ClearDeviceSelection();
             return;
         }
 
@@ -381,12 +381,7 @@ public partial class ToolsViewModel : ViewModelBase
         if (CurrentController == MaaControllerTypes.PlayCover
             || CurrentController == MaaControllerTypes.Dbg)
         {
-            DispatcherHelper.RunOnMainThread(() =>
-            {
-                Devices = [];
-                CurrentDevice = null;
-            });
-            SetConnected(false);
+            ClearDeviceSelection();
             return;
         }
 
@@ -571,6 +566,25 @@ public partial class ToolsViewModel : ViewModelBase
         });
     }
 
+    private void ClearDeviceSelection()
+    {
+        _refreshCancellationTokenSource?.Cancel();
+        DispatcherHelper.RunOnMainThread(() =>
+        {
+            _suppressAutoConnect = true;
+            try
+            {
+                Devices = [];
+                CurrentDevice = null;
+            }
+            finally
+            {
+                _suppressAutoConnect = false;
+            }
+        });
+        SetConnected(false);
+    }
+
     private bool TryGetIndexFromConfig(string configJson, out int index)
     {
         index = DeviceDisplayConverter.GetFirstEmulatorIndex(configJson);
@@ -582,7 +596,7 @@ public partial class ToolsViewModel : ViewModelBase
         if (CurrentController == MaaControllerTypes.PlayCover
             || CurrentController == MaaControllerTypes.Dbg)
         {
-            SetConnected(false);
+            ClearDeviceSelection();
             return;
         }
 
@@ -753,14 +767,14 @@ public partial class ToolsViewModel : ViewModelBase
     /// <summary>
     /// 解析 Win32ScreencapMethod，支持旧版 long 格式和新版 string 格式
     /// </summary>
-    private static Win32ScreencapMethod? ParseWin32ScreencapMethod(object? value)
+    private static Win32ScreencapMethods? ParseWin32ScreencapMethod(object? value)
     {
         if (value == null) return null;
 
         // 新版 string 格式（枚举名）
         if (value is string strValue)
         {
-            if (Enum.TryParse<Win32ScreencapMethod>(strValue, ignoreCase: true, out var result))
+            if (Enum.TryParse<Win32ScreencapMethods>(strValue, ignoreCase: true, out var result))
                 return result;
             return null;
         }
@@ -769,12 +783,12 @@ public partial class ToolsViewModel : ViewModelBase
         var longValue = Convert.ToInt64(value);
         return longValue switch
         {
-            1 => Win32ScreencapMethod.GDI,
-            2 => Win32ScreencapMethod.FramePool,
-            4 => Win32ScreencapMethod.DXGI_DesktopDup,
-            8 => Win32ScreencapMethod.DXGI_DesktopDup_Window,
-            16 => Win32ScreencapMethod.PrintWindow,
-            32 => Win32ScreencapMethod.ScreenDC,
+            1 => Win32ScreencapMethods.GDI,
+            2 => Win32ScreencapMethods.FramePool,
+            4 => Win32ScreencapMethods.DXGI_DesktopDup,
+            8 => Win32ScreencapMethods.DXGI_DesktopDup_Window,
+            16 => Win32ScreencapMethods.PrintWindow,
+            32 => Win32ScreencapMethods.ScreenDC,
             _ => null
         };
     }

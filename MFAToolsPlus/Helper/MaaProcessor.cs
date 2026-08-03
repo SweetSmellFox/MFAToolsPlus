@@ -40,7 +40,7 @@ public class DesktopWindowCoreConfig
     public nint HWnd { get; set; }
     public Win32InputMethod Mouse { get; set; } = Win32InputMethod.SendMessage;
     public Win32InputMethod KeyBoard { get; set; } = Win32InputMethod.SendMessage;
-    public Win32ScreencapMethod ScreenCap { get; set; } = Win32ScreencapMethod.FramePool;
+    public Win32ScreencapMethods ScreenCap { get; set; } = Win32ScreencapMethods.FramePool;
     public LinkOption Link { get; set; } = LinkOption.Start;
     public CheckStatusOption Check { get; set; } = CheckStatusOption.ThrowIfNotSucceeded;
 }
@@ -129,6 +129,12 @@ public class MaaProcessor
     public async Task TestConnecting()
     {
         await GetTaskerAsync();
+        if (Instances.ToolsViewModel.CurrentController == MaaControllerTypes.Dbg)
+        {
+            Instances.ToolsViewModel.SetConnected(MaaTasker is { IsInitialized: true });
+            return;
+        }
+
         var task = MaaTasker?.Controller?.LinkStart();
         task?.Wait();
         Instances.ToolsViewModel.SetConnected(task?.Status == MaaJobStatus.Succeeded);
@@ -144,6 +150,7 @@ public class MaaProcessor
         var controllerType = Instances.ToolsViewModel.CurrentController;
         var isAdb = controllerType == MaaControllerTypes.Adb;
         var isPlayCover = controllerType == MaaControllerTypes.PlayCover;
+        var isDbg = controllerType == MaaControllerTypes.Dbg;
         var targetKey = controllerType switch
         {
             MaaControllerTypes.Adb => LangKeys.Emulator,
@@ -156,7 +163,7 @@ public class MaaProcessor
 
         ToastHelper.Info(LangKeys.Tip.ToLocalization(), LangKeys.ConnectingTo.ToLocalizationFormatted(true, targetKey));
 
-        if (!isPlayCover && Instances.ToolsViewModel.CurrentDevice == null && Instances.ConnectSettingsUserControlModel.AutoDetectOnConnectionFailed)
+        if (!isPlayCover && !isDbg && Instances.ToolsViewModel.CurrentDevice == null && Instances.ConnectSettingsUserControlModel.AutoDetectOnConnectionFailed)
             Instances.ToolsViewModel.TryReadAdbDeviceFromConfig(false, true);
 
         var tuple = await TryConnectAsync(token);
@@ -565,7 +572,7 @@ public class MaaProcessor
         // }
     }
 
-    private static Win32ScreencapMethod ConfigureWin32ScreenCapTypes()
+    private static Win32ScreencapMethods ConfigureWin32ScreenCapTypes()
     {
         return Instances.ConnectSettingsUserControlModel.Win32ControlScreenCapType;
     }
