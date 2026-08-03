@@ -5,3 +5,5 @@
 /artifacts/
 /.dotnet/
 /**/obj/
+/build.log
+/build-diag.log
